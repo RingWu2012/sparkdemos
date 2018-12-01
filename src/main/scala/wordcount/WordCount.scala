@@ -17,7 +17,7 @@ object WordCount {
       * 在本地运行master 设置为 local[*]
       */
     val sparkConf = new SparkConf().setAppName("wordCount").setMaster("local[*]")
-    //新建sparkContext "main" java.lang.NoSuchMethodError: scala.Predef$.refArrayOps([Ljava/lang/Object;)Lscala/collection/mutable/ArrayOps
+    //新建sparkContext
     val sparkContext = new SparkContext(sparkConf)
 
     /**
@@ -25,7 +25,7 @@ object WordCount {
       * 文件路径可以写本地文件路径，前提是本地需要安装了hadoop，bin目录下有添加winutils相关dll，且配置了hadoop_home环境变量
       * 也可以写hdfs文件路径，譬如：hdfs：//hdp-01：8088/input/words.txt
       */
-    val lines : RDD[String]= sparkContext.textFile("D:\\words.txt",1)
+    val lines: RDD[String] = sparkContext.textFile("D:\\words.txt", 1)
     /**
       * flatmap可以将数据切分压平
       */
@@ -33,15 +33,19 @@ object WordCount {
     /**
       * map对数据进行映射，譬如将（hello，world）映射为 （（hello，1），（world，1））
       */
-    val mappedData = data.map((_,1))
+    val mappedData = data.map((_, 1))
     /**
       * reduceByKey算子对相同key的数据进行聚合
       */
-     val reducedData = mappedData.reduceByKey(_+_)
+    val reducedData = mappedData.reduceByKey(_ + _)
+    /**
+      * 聚合完成后，根据数量进行排序，数量是第二个属性，所以是_._2;ascending=false代表降序
+      */
+    val sortedData = reducedData.sortBy(_._2, false)
     /**
       * collect是action，触发任务执行获取数据
       */
-    val result = reducedData.collect()
+    val result = sortedData.collect()
     println(result.toBuffer)
     sparkContext.stop()
   }
